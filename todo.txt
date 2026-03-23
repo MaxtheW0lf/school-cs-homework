@@ -1,0 +1,57 @@
+0. def add_or_remove_grades(data: list[dict])->None:
+    The function allows you to modify a given student's grades
+
+    > how do u want to determine if we delete or add?
+
+1. find_user_by_id(data: list[dict], user_id: int) -> dict | None
+    Find exactly one user by id. Return the matching user dictionary if it exists, otherwise return None.
+
+2. find_users_by_name(data: list[dict], name: str) -> list[dict]
+    Return a list of all users whose name matches the given value. Think about case handling and empty names.
+
+3. delete_user_by_id(data: list[dict], user_id: int) -> bool
+    Remove one user from the list by id. Return True if a user was deleted and False if no matching id was found.
+
+4. update_user_name(data: list[dict], user_id: int, new_name: str) -> bool
+    Change the name of a chosen user. Return information about whether the update succeeded.
+
+5. update_user_surname(data: list[dict], user_id: int, new_surname: str) -> bool
+    Change the surname of a chosen user and keep the data structure consistent.
+
+6. update_user_birth_date(data: list[dict], user_id: int, new_birth_date: str) -> bool
+    Edit the "date of birth" field for one selected user.
+
+7. is_name_taken(data: list[dict], name: str, surname: str) -> bool
+    Check whether a user with the same name and surname already exists in the dataset.
+    > what's the point of that?
+
+
+8. show_one_user(user: dict) -> None
+    Print one user in a clear, readable format instead of printing the whole database every time.
+
+9. count_all_users(data: list[dict]) -> int
+    Return the total number of users stored in the list.
+
+10. count_users_with_missing_name(data: list[dict]) -> int
+    Count how many users have name equal to None or another empty value.
+
+11. average_math_for_user(user: dict) -> float | None
+    Calculate the average grade from the user's mathematics list. If the list is empty, return None.
+
+12. average_polish_for_user(user: dict) -> float | None
+    Calculate the average grade from the user's polish list.
+
+13. average_english_for_user(user: dict) -> float | None
+    Calculate the average grade from the user's English list.
+
+> combine 11,12,13 into average_grade_from_subject_for_user(user: dict, grade) -> float | None
+
+
+14. overall_average_for_user(user: dict) -> float | None
+    Calculate one combined average for a user using all three grade lists together.
+
+15. best_student_in_subject(data: list[dict], subject: str) -> dict | None
+    Find the student with the highest average in a chosen subject such as mathematics, polish, or English.
+
+16. subject_average_for_all_users(data: list[dict], subject: str) -> float | None
+    Calculate the average grade in one subject across the whole dataset.
