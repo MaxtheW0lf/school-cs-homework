@@ -26,7 +26,6 @@ main_menu = ui.Container(
     ui.Button("add student", 0, ui_state),
     ui.Button("show students", 1, ui_state, lambda: show_students()),
     ui.Button("Exit", 2, ui_state, stop),
-	ui.InputField("test", 3, ui_state)
 )
 
 
