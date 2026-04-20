@@ -26,6 +26,7 @@ main_menu = ui.Container(
     ui.Button("add student", 0, ui_state),
     ui.Button("show students", 1, ui_state, lambda: show_students()),
     ui.Button("Exit", 2, ui_state, stop),
+	ui.InputField("test", 3, ui_state)
 )
 
 
@@ -49,25 +50,24 @@ def show_students():
     go_back = ui.Button("Back", 0, ui_state, lambda: ui_state.change_ui(main_menu, main_menu))
 
     nav = ui.Container(style, go_back)
-
-    container = ui.Container(style, go_back)
+    margin_style = ui.Style(20, ui.Alignment.CENTER, margin_left=2)
+    container = ui.Container(margin_style, go_back)
 
     if students:
         keys = [k for k in students[0] if k != "id"]
 
         widths = {
             k: max(
-                len(k),  # include header length
+                len(k),  # include header lengths
                 *(len(str(student.get(k, ""))) for student in students)
             )
             for k in keys
         }
 
-        header = "  " + ' | '.join(f"{k:^{widths[k]}}" for k in keys)
+        header = ' | '.join(f"{k:<{widths[k]}}" for k in keys)
 
     
         container.add_element(ui.Label(header))
-        container.set_style(ui.Style(len(header), ui.Alignment.CENTER))
 
         for student in students:
             text = ' | '.join(
