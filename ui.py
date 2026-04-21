@@ -58,21 +58,15 @@ class UIState:
 				self.currently_selected = (self.currently_selected - 1) % self.ui_to_navigate.element_count()
 			case b'\xe0P' | "\x1b[B": # arrow up
 				self.currently_selected = (self.currently_selected + 1) % self.ui_to_navigate.element_count()
-
-		if isinstance(element, InputField):
-			element.handle_input(key)
-			return
-
-		match key:
-			case b'\r' | "\n": # enter
-				if isinstance(element, Button):
-					element.pressed()
-				
-
+		
+		element.handle_input(key)
 
 
 class Element:
 	def render(self, ui: UIState, style: Style):
+		pass
+				
+	def handle_input(self, key):
 		pass
 
 
@@ -88,11 +82,11 @@ class Container:
 		self.elements.append(element)
 
 	def render(self, ui: UIState):
-		print("+" + "-" * (self.style.width-2) + "+")
+		print("+" + "-" * (self.style.width-2 + self.style.margin_left) + "+")
 		for e in self.elements:
 			print(" "*self.style.margin_left, end="")
 			e.render(ui, self.style)
-		print("+" + "-" * (self.style.width-2) + "+")
+		print("+" + "-" * (self.style.width-2 + self.style.margin_left) + "+")
 
 	def element_count(self):
 		return len(self.elements)
@@ -114,6 +108,11 @@ class Button(Element):
 	def render(self, ui: UIState, style: Style):
 		self.style = style
 		print(self.button_func())
+	
+	def handle_input(self, key):
+		match key:
+			case b'\r' | "\n":
+				self.pressed()
 
 	def button_func(self) -> str:
 		if self.style is None:
@@ -144,8 +143,47 @@ class InputField(Element):
 		self.ui_state = ui_state
 
 	def handle_input(self, key):
-
 		common.reset()
+		# Enter → stop editing
+		if key in (b'\r', "\n"):
+			return
+
+		# Backspace
+		if key in (b'\x08', b'\x7f'):
+			self.value = self.value[:-1]
+			return
+
+		# Only accept normal characters
+		try:
+			char = key.decode()
+			if char.isprintable():
+				self.value += char
+				return
+		except:
+			pass
+
+	def render(self, ui: UIState, style: Style):
+		text = self.value if self.value else text_formatting.color(128,128,128) + self.placeholder + text_formatting.END
+
+		if self.position == self.ui_state.currently_selected:
+			text = f"[{text}<]"
+		else:
+			text = f" {text} "
+
+		print(text_formatting.format_length(text, style.width, style.alignment))
+
+class NumberInputField(Element):
+	def __init__(self, placeholder: str, position: int, ui_state: UIState, allow_float=False, allow_negative=False):
+		self.value = ""
+		self.placeholder = placeholder
+		self.position = position
+		self.ui_state = ui_state
+		self.allow_float = allow_float
+		self.allow_negative = allow_negative
+
+	def handle_input(self, key):
+		common.reset()
+
 		# Enter → stop editing
 		if key in (b'\r', "\n"):
 			return False
@@ -155,23 +193,100 @@ class InputField(Element):
 			self.value = self.value[:-1]
 			return True
 
-		# Only accept normal characters
 		try:
 			char = key.decode()
-			if char.isprintable():
+
+			# Digits are always allowed
+			if char.isdigit():
 				self.value += char
 				return True
+
+			# Handle decimal point
+			if self.allow_float and char == "." and "." not in self.value:
+				# prevent "." as first char unless you want "0."
+				if self.value == "":
+					self.value = "0."
+				else:
+					self.value += "."
+				return True
+
+			# Handle negative sign
+			if self.allow_negative and char == "-" and self.value == "":
+				self.value = "-"
+				return True
+
 		except:
 			pass
 
 		return False
 
 	def render(self, ui: UIState, style: Style):
-		text = self.value if self.value else text_formatting.color(128,128,128) + self.placeholder + text_formatting.END
+		text = self.value if self.value else (
+			text_formatting.color(128, 128, 128) +
+			self.placeholder +
+			text_formatting.END
+		)
 
 		if self.position == self.ui_state.currently_selected:
 			text = f"[{text}<]"
 		else:
 			text = f" {text} "
+
+		print(text_formatting.format_length(text, style.width, style.alignment))
+
+class DateInputField(Element):
+	def __init__(self, position: int, ui_state: UIState):
+		self.position = position
+		self.ui_state = ui_state
+
+		# internal fields
+		self.day = NumberInputField("DD", position, ui_state)
+		self.month = NumberInputField("MM", position, ui_state)
+		self.year = NumberInputField("YYYY", position, ui_state)
+
+		self.sub_index = 0  # 0=day, 1=month, 2=year
+		self.value = ""
+
+	def handle_input(self, key):
+		common.reset()
+
+		# switch between DD / MM / YYYY
+		if key in (b'\t',):  # TAB
+			self.sub_index = (self.sub_index + 1) % 3
+			return
+
+		if key in (b'\xe0K', "\x1b[D"):  # left arrow
+			self.sub_index = (self.sub_index - 1) % 3
+			return
+
+		if key in (b'\xe0M', "\x1b[C"):  # right arrow
+			self.sub_index = (self.sub_index + 1) % 3
+			return
+
+		# delegate input
+		fields = [self.day, self.month, self.year]
+		fields[self.sub_index].handle_input(key)
+
+		self.value = "-".join([self.day.value, self.month.value, self.year.value])
+
+
+	def render(self, ui: UIState, style: Style):
+		def fmt(field, selected):
+			text = field.value if field.value else (
+				text_formatting.color(128,128,128) + field.placeholder + text_formatting.END
+			)
+			return f"[{text}]" if selected else f" {text} "
+
+		selected_main = (self.position == self.ui_state.currently_selected)
+
+		parts = [
+			fmt(self.day, selected_main and self.sub_index == 0),
+			"/",
+			fmt(self.month, selected_main and self.sub_index == 1),
+			"/",
+			fmt(self.year, selected_main and self.sub_index == 2),
+		]
+
+		text = "".join(parts)
 
 		print(text_formatting.format_length(text, style.width, style.alignment))

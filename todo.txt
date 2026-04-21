@@ -1,8 +1,6 @@
 0. def add_or_remove_grades(data: list[dict])->None:
     The function allows you to modify a given student's grades
 
-    > how do u want to determine if we delete or add?
-
 1. find_user_by_id(data: list[dict], user_id: int) -> dict | None
     Find exactly one user by id. Return the matching user dictionary if it exists, otherwise return None.
 

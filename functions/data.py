@@ -1,17 +1,25 @@
 import json
+import os
 
-def save_data(data):
-    with open("data.json", "w", encoding="utf-8") as file:
-        json.dump(data, file, indent=4)
+FILE = "data.json"
+
+
+def ensure_file():
+    if not os.path.exists(FILE):
+        with open(FILE, "w", encoding="utf-8") as f:
+            json.dump([], f)
+
 
 def read_data():
-    with open("data.json", "r", encoding="utf-8") as file:
-        return json.load(file)
+    ensure_file()
+
+    try:
+        with open(FILE, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except json.JSONDecodeError:
+        return []
 
 
-
-def print_data(data:list[dict]):
-    for el in data:
-        print("==="*20)
-        for k,v in el.items():
-            print(f"{k} ----- {v}")
+def save_data(new_data):
+    with open(FILE, "w", encoding="utf-8") as f:
+        json.dump(new_data, f, indent=2)
