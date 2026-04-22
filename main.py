@@ -1,4 +1,4 @@
-from functions import data
+import data
 
 import common
 import text_formatting
