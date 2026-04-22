@@ -20,6 +20,6 @@ def read_data():
         return []
 
 
-def save_data(new_data):
+def save_data(new_data: list):
     with open(FILE, "w", encoding="utf-8") as f:
         json.dump(new_data, f, indent=2)
