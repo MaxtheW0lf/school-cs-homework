@@ -14,11 +14,14 @@ def get_key():
     if WINDOWS:
         key = msvcrt.getch()
 
-        # Arrow keys come as two bytes
+        # Arrow / special keys (two bytes)
         if key == b'\xe0':
-            key2 = msvcrt.getch()
-            return key + key2
-        return key
+            key += msvcrt.getch()
+
+        try:
+            return key.decode('utf-8', errors='ignore')
+        except UnicodeDecodeError:
+            return ""
 
     else:
         fd = sys.stdin.fileno()

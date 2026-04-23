@@ -129,7 +129,7 @@ class Button(Element):
 	
 	def handle_input(self, key):
 		match key:
-			case b'\r' | "\n":
+			case b'\r' | "\n" | b'\n' | "\r":
 				self.pressed()
 
 	def button_func(self) -> str:
@@ -162,7 +162,7 @@ class InputField(Element):
 
 	def handle_input(self, key):
 		# Enter → stop editing
-		if key in (b'\r', "\n"):
+		if key in (b'\r', "\n", b'\n', "\r"):
 			return
 
 		# Backspace
@@ -171,13 +171,8 @@ class InputField(Element):
 			return
 
 		# Only accept normal characters
-		try:
-			char = key.decode()
-			if char.isprintable():
-				self.value += char
-				return
-		except:
-			pass
+		if key.isprintable():
+			self.value += key
 
 	def render(self, ui: UIState, style: Style):
 		text = self.value if self.value else common.color(128,128,128) + self.placeholder + common.END
@@ -200,7 +195,7 @@ class NumberInputField(Element):
 
 	def handle_input(self, key):
 		# Enter → stop editing
-		if key in (b'\r', "\n"):
+		if key in (b'\r', "\n", b'\n', "\r"):
 			return
 
 		# Backspace
