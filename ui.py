@@ -52,9 +52,9 @@ class UIState:
 		element: Element = self.ui_to_navigate.elements[self.currently_selected]
 
 		match key:
-			case b'\xe0H' | "\x1b[A": # arrow down
+			case "UP": # arrow down
 				self.currently_selected = (self.currently_selected - 1) % self.ui_to_navigate.element_count()
-			case b'\xe0P' | "\x1b[B": # arrow up
+			case "DOWN": # arrow up
 				self.currently_selected = (self.currently_selected + 1) % self.ui_to_navigate.element_count()
 		
 		element.handle_input(key)
@@ -128,9 +128,8 @@ class Button(Element):
 		print(self.button_func(), end="")
 	
 	def handle_input(self, key):
-		match key:
-			case b'\r' | "\n" | b'\n' | "\r":
-				self.pressed()
+		if key in ("\n", "\r"):
+			self.pressed()
 
 	def button_func(self) -> str:
 		if self.style is None:
@@ -162,7 +161,7 @@ class InputField(Element):
 
 	def handle_input(self, key):
 		# Enter → stop editing
-		if key in (b'\r', "\n", b'\n', "\r"):
+		if key in ("\n", "\r", "UP", "LEFT", "RIGHT",  "DOWN"):
 			return
 
 		# Backspace
@@ -195,7 +194,7 @@ class NumberInputField(Element):
 
 	def handle_input(self, key):
 		# Enter → stop editing
-		if key in (b'\r', "\n", b'\n', "\r"):
+		if key in ("\n", "\r", "UP", "LEFT", "RIGHT",  "DOWN"):
 			return
 
 		# Backspace
@@ -204,15 +203,12 @@ class NumberInputField(Element):
 			return
 
 		try:
-			char = key.decode()
-
-			# Digits are always allowed
-			if char.isdigit():
-				self.value += char
+			if key.isdigit():
+				self.value += key
 				return
 
 			# Handle decimal point
-			if self.allow_float and char == "." and "." not in self.value:
+			if self.allow_float and key == "." and "." not in self.value:
 				# prevent "." as first char unless you want "0."
 				if self.value == "":
 					self.value = "0."
@@ -221,7 +217,7 @@ class NumberInputField(Element):
 				return
 
 			# Handle negative sign
-			if self.allow_negative and char == "-" and self.value == "":
+			if self.allow_negative and key == "-" and self.value == "":
 				self.value = "-"
 				return
 
@@ -269,11 +265,11 @@ class DateInputField(Element):
 			self.sub_index = (self.sub_index + 1) % 3
 			return
 
-		if key in (b'\xe0K', "\x1b[D"):  # left arrow
+		if key == "LEFT":  # left arrow
 			self.sub_index = (self.sub_index - 1) % 3
 			return
 
-		if key in (b'\xe0M', "\x1b[C"):  # right arrow
+		if key == "RIGHT":  # right arrow
 			self.sub_index = (self.sub_index + 1) % 3
 			return
 

@@ -10,18 +10,25 @@ else:
     import tty
 
 
-def get_key():
+def get_key() -> str:
     if WINDOWS:
         key = msvcrt.getch()
 
-        # Arrow / special keys (two bytes)
+        # Special keys (arrows, etc.)
         if key == b'\xe0':
-            key += msvcrt.getch()
+            key2 = msvcrt.getch()
+            combo = key + key2
 
-        try:
-            return key.decode('utf-8', errors='ignore')
-        except UnicodeDecodeError:
-            return ""
+            KEY_MAP = {
+                b'\xe0H': 'UP',
+                b'\xe0P': 'DOWN',
+                b'\xe0K': 'LEFT',
+                b'\xe0M': 'RIGHT',
+            }
+
+            return KEY_MAP.get(combo, 'SPECIAL')
+
+        return key.decode(errors='ignore')
 
     else:
         fd = sys.stdin.fileno()
@@ -34,7 +41,17 @@ def get_key():
             if ch1 == "\x1b":
                 ch2 = sys.stdin.read(1)
                 ch3 = sys.stdin.read(1)
-                return ch1 + ch2 + ch3
+
+                combo = ch1 + ch2 + ch3
+
+                KEY_MAP = {
+                    '\x1b[A': 'UP',
+                    '\x1b[B': 'DOWN',
+                    '\x1b[D': 'LEFT',
+                    '\x1b[C': 'RIGHT',
+                }
+
+                return KEY_MAP.get(combo, 'SPECIAL')
 
             return ch1
         finally:
